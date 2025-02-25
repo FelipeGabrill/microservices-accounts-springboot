@@ -5,7 +5,7 @@ import lombok.*;
 
 @Entity
 @Getter @Setter @ToString @AllArgsConstructor @NoArgsConstructor
-public class Accouts extends BaseEntity {
+public class Accounts extends BaseEntity {
 
     @Column(name = "account_number")
     @Id
@@ -19,7 +19,4 @@ public class Accouts extends BaseEntity {
 
     @Column(name = "branch_address")
     private String branchAddress;
-
-    @Column(name = "mobile_number")
-    private String mobileNumber;
 }
