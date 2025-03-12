@@ -9,13 +9,12 @@ import com.eazybytes.accounts.exception.CustomerAlreadyExistsException;
 import com.eazybytes.accounts.exception.ResourceNotFoundException;
 import com.eazybytes.accounts.mapper.AccountsMapper;
 import com.eazybytes.accounts.mapper.CustomerMapper;
-import com.eazybytes.accounts.repository.AccoutsRepository;
+import com.eazybytes.accounts.repository.AccountsRepository;
 import com.eazybytes.accounts.repository.CustomerRepository;
 import com.eazybytes.accounts.service.IAccountsService;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.Random;
 
@@ -23,7 +22,7 @@ import java.util.Random;
 @AllArgsConstructor
 public class AccountsServiceImpl implements IAccountsService {
 
-    private AccoutsRepository accountsRepository;
+    private AccountsRepository accountsRepository;
 
     private CustomerRepository customerRepository;
 

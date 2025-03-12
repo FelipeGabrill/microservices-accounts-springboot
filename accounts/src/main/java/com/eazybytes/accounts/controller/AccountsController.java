@@ -24,8 +24,6 @@ import com.eazybytes.accounts.dto.CustomerDto;
 import com.eazybytes.accounts.dto.ResponseDto;
 import com.eazybytes.accounts.service.IAccountsService;
 
-import lombok.AllArgsConstructor;
-
 @Tag(
         name = "CRUD REST APIs for Accounts in EazyBank",
         description = "CRUD REST APIs in EazyBank to CREATE, UPDATE, FETCH AND DELETE account details"
