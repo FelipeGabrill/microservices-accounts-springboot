@@ -7,7 +7,8 @@ spring:
     gateway:
       discovery:
         locator:
-          enable: true
+          enabled: false
+          lowerCaseServiceId: true
 
 management:
   endpoints:
@@ -16,7 +17,7 @@ management:
         include: "*"
   endpoint:
     gateway:
-      enable: unrestricted
+      access: unrestricted
   info:
     env:
       enabled: true
