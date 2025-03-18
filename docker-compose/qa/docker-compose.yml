@@ -12,7 +12,7 @@ services:
   #  retries: 10
   #  start_period: 5s
   # extends:
-  #  file: commom-config.yml
+  #  file: common-config.yml
   # service: network-deploy-service
   #  accountsdb:
   #    container_name: accountsdb
@@ -21,7 +21,7 @@ services:
   #    environment:
   #      MYSQL_DATABASE: accountsdb
   #    extends:
-  #      file: commom-config.yml
+  #      file: common-config.yml
   #      service: microservice-db-config
   #
   #  loansdb:
@@ -31,7 +31,7 @@ services:
   #    environment:
   #      MYSQL_DATABASE: loansdb
   #    extends:
-  #      file: commom-config.yml
+  #      file: common-config.yml
   #      service: microservice-db-config
   #
   #  cardsdb:
@@ -41,11 +41,23 @@ services:
   #    environment:
   #      MYSQL_DATABASE: cardsdb
   #    extends:
-  #      file: commom-config.yml
+  #      file: common-config.yml
   #      service: microservice-db-config
 
+  redis:
+    image: redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: [ "CMD-SHELL", "redis-cli ping | grep PONG" ]
+      timeout: 10s
+      retries: 10
+    extends:
+      file: common-config.yml
+      service: network-deploy-service
+
   configserver:
-    image: "felipegabrill/configserver:s9"
+    image: "felipegabrill/configserver:s10"
     container_name: configserver-ms
     ports:
       - "8071:8071"
@@ -59,11 +71,11 @@ services:
       retries: 10
       start_period: 10s
     extends:
-      file: commom-config.yml
+      file: common-config.yml
       service: microservice-base-config
 
   eurekaserver:
-    image: "felipegabrill/eurekaserver:s9"
+    image: "felipegabrill/eurekaserver:s10"
     container_name: eurekaserver-ms
     ports:
       - "8070:8070"
@@ -74,7 +86,7 @@ services:
       retries: 10
       start_period: 10s
     extends:
-      file: commom-config.yml
+      file: common-config.yml
       service: microservice-configserver-config
     depends_on:
       configserver:
@@ -83,7 +95,7 @@ services:
       SPRING_APPLICATION_NAME: "eurekaserver"
 
   accounts:
-    image: "felipegabrill/accounts:s9"
+    image: "felipegabrill/accounts:s10"
     container_name: accounts-ms
     ports:
       - "8080:8080"
@@ -104,11 +116,11 @@ services:
       eurekaserver:
         condition: service_healthy
     extends:
-      file: commom-config.yml
+      file: common-config.yml
       service: microservice-eureka-config
 
   loans:
-    image: "felipegabrill/loans:s9"
+    image: "felipegabrill/loans:s10"
     container_name: loans-ms
     ports:
       - "8090:8090"
@@ -129,11 +141,11 @@ services:
       eurekaserver:
         condition: service_healthy
     extends:
-      file: commom-config.yml
+      file: common-config.yml
       service: microservice-eureka-config
 
   cards:
-    image: "felipegabrill/cards:s9"
+    image: "felipegabrill/cards:s10"
     container_name: cards-ms
     ports:
       - "9000:9000"
@@ -155,29 +167,31 @@ services:
         condition: service_healthy
 
     extends:
-      file: commom-config.yml
+      file: common-config.yml
       service: microservice-eureka-config
 
   gatewayserver:
-    image: "felipegabrill/gatewayserver:s9"
+    image: "eazybytes/gatewayserver:s10"
     container_name: gatewayserver-ms
     ports:
       - "8072:8072"
-    environment:
-      SPRING_APPLICATION_NAME: "gatewayserver"
     depends_on:
-      configserver:
-        condition: service_healthy
-      eurekaserver:
-        condition: service_healthy
       accounts:
         condition: service_healthy
       loans:
         condition: service_healthy
       cards:
         condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      SPRING_APPLICATION_NAME: "gatewayserver"
+      SPRING_DATA_REDIS_CONNECT-TIMEOUT: 2s
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      SPRING_DATA_REDIS_TIMEOUT: 1s
     extends:
-      file: commom-config.yml
+      file: common-config.yml
       service: microservice-eureka-config
 
 networks:
