@@ -80,7 +80,7 @@
 				<version>3.4.2</version>
 				<configuration>
 					<to>
-						<image>felipegabrill/${project.artifactId}:s10</image>
+						<image>felipegabrill/${project.artifactId}:s11</image>
 					</to>
 				</configuration>
 			</plugin>
