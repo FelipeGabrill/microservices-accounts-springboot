@@ -1,24 +1,44 @@
 services:
-  rabbit:
-    image: rabbitmq:4.0-management
-    user: 999:999
-    hostname: rabbitmq
+  kafka:
+    image: docker.io/bitnami/kafka:3.9
     ports:
-      - "5672:5672"
-      - "15672:15672"
-    deploy:
-      resources:
-        limits:
-          memory: 2g
-    healthcheck:
-      test: rabbitmq-diagnostics check_port_connectivity
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 30s
+      - "9092:9092"
+    volumes:
+      - "kafka_data:/bitnami"
+    environment:
+      # KRaft settings
+      - KAFKA_CFG_NODE_ID=0
+      - KAFKA_CFG_PROCESS_ROLES=controller,broker
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka:9093
+      # Listeners
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://:9092
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=PLAINTEXT
     extends:
       file: common-config.yml
       service: network-deploy-service
+#  rabbit:
+#    image: rabbitmq:4.0-management
+#    user: 999:999
+#    hostname: rabbitmq
+#    ports:
+#      - "5672:5672"
+#      - "15672:15672"
+#    deploy:
+#      resources:
+#        limits:
+#          memory: 2g
+#    healthcheck:
+#      test: rabbitmq-diagnostics check_port_connectivity
+#      interval: 30s
+#      timeout: 10s
+#      retries: 5
+#      start_period: 30s
+#    extends:
+#      file: common-config.yml
+#      service: network-deploy-service
 
   #  accountsdb:
   #    container_name: accountsdb
@@ -290,7 +310,7 @@ services:
       service: network-deploy-service
 
   configserver:
-    image: "felipegabrill/configserver:s13"
+    image: "felipegabrill/configserver:s14"
     container_name: configserver-ms
     ports:
       - "8071:8071"
@@ -299,10 +319,10 @@ services:
       # condition: service_healthy
     healthcheck:
       test: "curl --fail --silent localhost:8071/actuator/health/readiness | grep UP || exit 1"
-      interval: 20s
-      timeout: 5s
+      interval: 30s
+      timeout: 10s
       retries: 20
-      start_period: 10s
+      start_period: 30s
     extends:
       file: common-config.yml
       service: microservice-base-config
@@ -310,7 +330,7 @@ services:
       OTEL_SERVICE_NAME: "configserver"
 
   eurekaserver:
-    image: "felipegabrill/eurekaserver:s13"
+    image: "felipegabrill/eurekaserver:s14"
     container_name: eurekaserver-ms
     ports:
       - "8070:8070"
@@ -331,7 +351,7 @@ services:
       OTEL_SERVICE_NAME: "eurekaserver"
 
   accounts:
-    image: "felipegabrill/accounts:s13"
+    image: "felipegabrill/accounts:s14"
     container_name: accounts-ms
     healthcheck:
       test: "curl --fail --silent localhost:8080/actuator/health/readiness | grep UP || exit 1"
@@ -342,7 +362,8 @@ services:
     environment:
       SPRING_APPLICATION_NAME: "accounts"
       OTEL_SERVICE_NAME: "accounts"
-      SPRING_RABBITMQ_HOST: "rabbit"
+      SPRING_CLOUD_STREAM_KAFKA_BINDER_BROKERS: "kafka:9092"
+    #      SPRING_RABBITMQ_HOST: "rabbit"
     #      SPRING_DATASOURCE_URL: "jdbc:mysql://accountsdb:3306/accountsdb"
     depends_on:
       #      accountsdb:
@@ -351,14 +372,14 @@ services:
         condition: service_healthy
       eurekaserver:
         condition: service_healthy
-      rabbit:
-        condition: service_healthy
+#      rabbit:
+#        condition: service_healthy
     extends:
       file: common-config.yml
       service: microservice-eureka-config
 
   loans:
-    image: "felipegabrill/loans:s13"
+    image: "felipegabrill/loans:s14"
     container_name: loans-ms
     healthcheck:
       test: "curl --fail --silent localhost:8090/actuator/health/readiness | grep UP || exit 1"
@@ -382,7 +403,7 @@ services:
       service: microservice-eureka-config
 
   cards:
-    image: "felipegabrill/cards:s13"
+    image: "felipegabrill/cards:s14"
     container_name: cards-ms
     healthcheck:
       test: "curl --fail --silent localhost:9000/actuator/health/readiness | grep UP || exit 1"
@@ -407,19 +428,21 @@ services:
       service: microservice-eureka-config
 
   message:
-    image: "felipegabrill/message:s13"
+    image: "felipegabrill/message:s14"
     container_name: message-ms
-    depends_on:
-      rabbit:
-        condition: service_healthy
+#    depends_on:
+#      rabbit:
+#        condition: service_healthy
     environment:
-      SPRING_RABBITMQ_HOST: "rabbit"
+#      SPRING_RABBITMQ_HOST: "rabbit"
+      SPRING_CLOUD_STREAM_KAFKA_BINDER_BROKERS: "kafka:9092"
+
     extends:
       file: common-config.yml
       service: network-deploy-service
 
   gatewayserver:
-    image: "felipegabrill/gatewayserver:s13"
+    image: "felipegabrill/gatewayserver:s14"
     container_name: gatewayserver-ms
     ports:
       - "8072:8072"
@@ -443,6 +466,10 @@ services:
     extends:
       file: common-config.yml
       service: microservice-eureka-config
+
+volumes:
+  kafka_data:
+    driver: local
 
 networks:
   eazybank:
